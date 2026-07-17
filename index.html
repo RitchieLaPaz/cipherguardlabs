@@ -19,7 +19,7 @@
     --hair:rgba(237,231,218,0.12);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--ink);color:var(--parchment);font-family:'IBM Plex Sans',sans-serif;cursor:none;overflow-x:hidden;}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--parchment);font-family:'IBM Plex Sans',sans-serif;cursor:none;overflow-x:hidden;scroll-behavior:smooth;}
   a{color:inherit;}
 
   /* ambient continuous animation: drifting scan sweep + faint grid */
@@ -60,8 +60,8 @@
   .brand{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.12em;color:var(--parchment);}
   .brand b{color:var(--bronze-bright);font-weight:500;}
   .navlinks{display:flex;gap:36px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;color:var(--parchment-dim);}
-  .navlinks span{cursor:pointer;position:relative;padding:2px 0;}
-  .navlinks span:hover{color:var(--bronze-bright);}
+  .navlinks a{cursor:none;position:relative;padding:2px 0;text-decoration:none;color:inherit;}
+  .navlinks a:hover{color:var(--bronze-bright);}
 
   /* hero */
   header.hero{padding:120px 40px 100px;position:relative;border-bottom:1px solid var(--hair);}
@@ -161,7 +161,7 @@
 <nav>
   <div class="brand">CIPHER<b>GUARD</b> LABS</div>
   <div class="navlinks">
-    <span>WORK</span><span>METHOD</span><span>CONTACT</span>
+    <a href="#work">WORK</a><a href="#method">METHOD</a><a href="#contact">CONTACT</a>
   </div>
 </nav>
 
@@ -173,13 +173,13 @@
         <span class="decrypt-word accent" data-final="we begin.">we begin.</span></h1>
     <p class="sub">Automation platforms route messages between tools you already own. We build the intelligence underneath — reputation operations, warehouse-aware analytics bots, brand dashboards, and compliance search, engineered from the ground up and shipped into your actual workflow.</p>
     <div class="cta-row">
-      <a class="btn solid" href="#">View the work</a>
-      <a class="btn ghost" href="#">Book a scoping call</a>
+      <a class="btn solid" href="#work">View the work</a>
+      <a class="btn ghost" href="mailto:hello@cipherguardlabs.com?subject=Scoping%20call">Book a scoping call</a>
     </div>
   </div>
 </header>
 
-<section class="cases">
+<section class="cases" id="work">
   <div class="wrap" style="padding:0;">
     <div class="section-head">
       <h2>Deployed systems</h2>
@@ -226,7 +226,7 @@
   </div>
 </section>
 
-<section class="method">
+<section class="method" id="method">
   <div class="wrap" style="padding:0;">
     <div class="section-head" style="margin-bottom:64px;">
       <h2>How we build</h2>
@@ -252,15 +252,15 @@
   </div>
 </section>
 
-<footer>
+<footer id="contact">
   <div class="wrap" style="padding:0;">
     <div class="eyebrow" style="justify-content:center;">Start a build</div>
     <h2>Tell us what you're<br><span style="font-style:italic;color:var(--bronze-bright);">tired of watching manually.</span></h2>
-    <a class="btn solid" href="#">Book a scoping call</a>
+    <a class="btn solid" href="mailto:hello@cipherguardlabs.com?subject=Scoping%20call">Book a scoping call</a>
     <div class="foot-links">
       <span>© CIPHERGUARD LABS</span>
       <span>PRIVACY</span>
-      <span>HELLO@CIPHERGUARDLABS.COM</span>
+      <a href="mailto:hello@cipherguardlabs.com" style="color:inherit;text-decoration:none;">HELLO@CIPHERGUARDLABS.COM</a>
     </div>
   </div>
 </footer>
@@ -276,7 +276,7 @@
     dot.style.left = e.clientX+'px';
     dot.style.top = e.clientY+'px';
   });
-  document.querySelectorAll('a,.card,.navlinks span').forEach(el=>{
+  document.querySelectorAll('a,.card').forEach(el=>{
     el.addEventListener('mouseenter',()=>reticle.classList.add('active'));
     el.addEventListener('mouseleave',()=>reticle.classList.remove('active'));
   });
