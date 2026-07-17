@@ -64,27 +64,44 @@
   .navlinks a:hover{color:var(--bronze-bright);}
 
   /* hero */
-  header.hero{padding:120px 40px 100px;position:relative;border-bottom:1px solid var(--hair);}
+  header.hero{padding:104px 40px 88px;position:relative;border-bottom:1px solid var(--hair);overflow:hidden;}
+  .hero-inner{max-width:860px;position:relative;z-index:1;}
+
+  .hero-orrery{position:absolute;top:50%;right:-90px;transform:translateY(-50%);
+    width:640px;height:640px;pointer-events:none;z-index:0;opacity:.55;}
+  .hero-orrery svg{width:100%;height:100%;display:block;}
+  .orrery-ring{transform-origin:320px 320px;}
+  .orrery-ring.r1{animation:orrery-spin 48s linear infinite;}
+  .orrery-ring.r2{animation:orrery-spin-rev 68s linear infinite;}
+  .orrery-ring.r3{animation:orrery-spin 96s linear infinite;}
+  @keyframes orrery-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  @keyframes orrery-spin-rev{from{transform:rotate(360deg);}to{transform:rotate(0deg);}}
+  .orrery-hub{animation:orrery-pulse 4.5s ease-in-out infinite;}
+  @keyframes orrery-pulse{0%,100%{opacity:.7;}50%{opacity:1;}}
+  .orrery-glyph{font-family:'IBM Plex Mono',monospace;font-size:13px;fill:var(--bronze-bright);opacity:.8;}
+  @media (max-width:1100px){.hero-orrery{display:none;}}
+  @media (prefers-reduced-motion: reduce){.orrery-ring,.orrery-hub{animation:none;}}
+
   .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;color:var(--bronze);
            text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:10px;}
   .eyebrow::before{content:'';width:22px;height:1px;background:var(--bronze);}
 
-  .ai-first{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:clamp(18px,2.4vw,28px);
-    letter-spacing:.08em;color:var(--bronze-bright);margin:0 0 30px;display:flex;align-items:center;gap:18px;}
+  .ai-first{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:clamp(18px,2.4vw,26px);
+    letter-spacing:.08em;color:var(--bronze-bright);margin:0 0 22px;display:flex;align-items:center;gap:18px;}
   .ai-first .line{flex:1;height:1px;background:linear-gradient(90deg, var(--bronze) 0%, transparent 100%);
     max-width:80px;}
   .ai-first .glyph-flicker{color:var(--teal);}
-  .not-this{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.06em;color:var(--parchment-dim);
-    margin:0 0 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .not-this{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.06em;color:var(--parchment-dim);
+    margin:0 0 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
   .not-this .struck{text-decoration:line-through;text-decoration-color:#e6c229;text-decoration-thickness:2px;
-    color:#f2d84b;opacity:.9;font-size:1.5em;font-weight:500;}
+    color:#f2d84b;opacity:.9;font-size:1.3em;font-weight:500;}
   .not-this .not-word{color:var(--parchment-dim);}
 
-  h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(40px,6vw,74px);line-height:1.04;
-     letter-spacing:-.01em;margin:0 0 28px;max-width:18ch;}
+  h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(30px,4.6vw,50px);line-height:1.1;
+     letter-spacing:-.01em;margin:0 0 22px;white-space:nowrap;}
   .decrypt-word{display:inline-block;}
   h1 .accent{font-style:italic;font-weight:300;color:var(--bronze-bright);}
-  .sub{font-size:18px;line-height:1.65;color:var(--parchment-dim);max-width:52ch;margin:0 0 44px;}
+  .sub{font-size:17px;line-height:1.6;color:var(--parchment-dim);max-width:52ch;margin:0 0 36px;}
   .cta-row{display:flex;gap:18px;align-items:center;}
   .btn{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;padding:14px 26px;
        border:1px solid var(--bronze);color:var(--parchment);text-decoration:none;transition:.25s;
@@ -158,6 +175,7 @@
     .grid,.method-grid{grid-template-columns:1fr;}
     nav,header.hero,section.cases,section.method,footer{padding-left:22px;padding-right:22px;}
     .navlinks{display:none;}
+    h1{white-space:normal;font-size:clamp(30px,8vw,44px);}
   }
 </style>
 </head>
@@ -192,15 +210,44 @@
 </nav>
 
 <header class="hero">
+  <div class="hero-orrery" aria-hidden="true">
+    <svg viewBox="0 0 640 640">
+      <g class="orrery-ring r1" transform="translate(-40,-40)">
+        <circle cx="320" cy="320" r="260" fill="none" stroke="var(--bronze)" stroke-width="1"/>
+        <circle cx="320" cy="60" r="4" fill="var(--bronze)"/>
+        <circle cx="320" cy="580" r="4" fill="var(--bronze)"/>
+        <circle cx="60" cy="320" r="4" fill="var(--bronze)"/>
+        <circle cx="580" cy="320" r="4" fill="var(--bronze)"/>
+      </g>
+      <g class="orrery-ring r2" transform="translate(-40,-40)">
+        <circle cx="320" cy="320" r="190" fill="none" stroke="var(--teal)" stroke-width="1"/>
+        <text class="orrery-glyph" x="320" y="140">&#916;</text>
+        <text class="orrery-glyph" x="470" y="330">&#926;</text>
+        <text class="orrery-glyph" x="320" y="512">01</text>
+        <text class="orrery-glyph" x="150" y="330">&#931;</text>
+      </g>
+      <g class="orrery-ring r3" transform="translate(-40,-40)">
+        <circle cx="320" cy="320" r="130" fill="none" stroke="var(--bronze)" stroke-width="1"/>
+        <g stroke="var(--bronze)" stroke-width="1">
+          <line x1="320" y1="192" x2="320" y2="204"/>
+          <line x1="320" y1="436" x2="320" y2="448"/>
+          <line x1="192" y1="320" x2="204" y2="320"/>
+          <line x1="436" y1="320" x2="448" y2="320"/>
+        </g>
+      </g>
+      <circle class="orrery-hub" cx="280" cy="280" r="5" fill="var(--bronze-bright)"/>
+    </svg>
+  </div>
   <div class="wrap" style="padding:0;">
+    <div class="hero-inner">
     <div class="ai-first"><span class="line"></span><span id="ai-first-text">AI&#8209;FIRST SOLUTIONS LAB</span><span class="line"></span></div>
     <p class="not-this">Not <span class="struck">MCPs</span>. Not <span class="struck">Zapier</span>. Not another <span class="struck">no-code stack</span>.</p>
-    <h1><span class="decrypt-word" data-final="Where no-code">Where no-code</span> <span class="decrypt-word" data-final="stops,">stops,</span><br>
-        <span class="decrypt-word accent" data-final="we begin.">we begin.</span></h1>
+    <h1><span class="decrypt-word" data-final="Where no-code">Where no-code</span> <span class="decrypt-word" data-final="stops,">stops,</span> <span class="decrypt-word accent" data-final="we begin.">we begin.</span></h1>
     <p class="sub">Automation platforms route messages between tools you already own. We build the intelligence underneath — reputation operations, warehouse-aware analytics bots, brand dashboards, and compliance search, engineered from the ground up and shipped into your actual workflow.</p>
     <div class="cta-row">
       <a class="btn solid" href="#work">View the work</a>
       <a class="btn ghost" href="#contact">Book a scoping call</a>
+    </div>
     </div>
   </div>
 </header>
@@ -366,6 +413,15 @@
       aiEl.innerHTML = chars.join("");
       setTimeout(()=>{ aiEl.textContent = base; }, 130);
     }, 1400);
+
+    /* orrery glyph cycle */
+    const orreryGlyphs = document.querySelectorAll('.orrery-glyph');
+    const glyphPool = ["Δ","Ξ","Σ","Θ","Ω","01","%","#"];
+    setInterval(()=>{
+      const g = orreryGlyphs[Math.floor(Math.random()*orreryGlyphs.length)];
+      if(!g) return;
+      g.textContent = glyphPool[Math.floor(Math.random()*glyphPool.length)];
+    }, 2200);
   });
 
   /* scoping-call modal */
