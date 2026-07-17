@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversational Marketing Intelligence — CipherGuard Labs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg-0:#0B0F16;
+    --bg-1:#121826;
+    --bg-2:#182034;
+    --brass:#C9A24B;
+    --brass-dim:#8A7130;
+    --ink:#E9E7DE;
+    --ink-dim:#9AA3B5;
+    --line:#26304A;
+    --signal:#5FBF8F;
+    --radius:2px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg-0);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--brass); color:#14100A; }
+
+  a{color:inherit;}
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 32px; }
+
+  h1,h2,h3{ font-family:'Fraunces',serif; margin:0; letter-spacing:-0.01em; }
+  .mono{ font-family:'IBM Plex Mono',monospace; }
+
+  /* ---------- NAV ---------- */
+  header.site{
+    border-bottom:1px solid var(--line);
+    padding:20px 0;
+    position:sticky; top:0; z-index:20;
+    background:rgba(11,15,22,0.9);
+    backdrop-filter:blur(8px);
+  }
+  header.site .wrap{ display:flex; align-items:center; justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:0.02em; }
+  .brand-mark{
+    width:20px; height:20px; border:1.5px solid var(--brass);
+    border-radius:50%;
+    position:relative;
+  }
+  .brand-mark::after{
+    content:''; position:absolute; left:50%; top:50%;
+    width:2px; height:8px; background:var(--brass);
+    transform:translate(-50%,-30%);
+  }
+  .eyebrow-nav{ color:var(--ink-dim); font-size:13px; font-family:'IBM Plex Mono',monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero{ padding:96px 0 72px; border-bottom:1px solid var(--line); }
+  .hero-grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:56px; align-items:center; }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--brass);
+    text-transform:uppercase; letter-spacing:0.12em; margin-bottom:18px; display:block;
+  }
+  .hero h1{ font-size:44px; line-height:1.12; font-weight:600; }
+  .hero h1 em{ font-style:normal; color:var(--brass); }
+  .hero p.lede{ color:var(--ink-dim); font-size:17px; max-width:46ch; margin-top:20px; }
+  .hero-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:28px; }
+  .tag{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-dim);
+    border:1px solid var(--line); padding:6px 10px; border-radius:var(--radius);
+  }
+
+  /* ---------- SIGNATURE: slack thread ---------- */
+  .slack-card{
+    background:var(--bg-1); border:1px solid var(--line); border-radius:6px;
+    overflow:hidden; box-shadow:0 24px 60px -20px rgba(0,0,0,0.6);
+  }
+  .slack-head{
+    display:flex; align-items:center; gap:8px; padding:12px 16px;
+    border-bottom:1px solid var(--line); background:var(--bg-2);
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-dim);
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--signal); }
+  .slack-body{ padding:20px; font-size:14px; }
+  .msg{ display:flex; gap:12px; margin-bottom:18px; opacity:0; animation:rise 0.6s ease forwards; }
+  .msg:nth-child(1){ animation-delay:0.15s; }
+  .msg:nth-child(2){ animation-delay:0.9s; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .avatar{
+    width:28px; height:28px; border-radius:5px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600;
+  }
+  .avatar.user{ background:var(--line); color:var(--ink); }
+  .avatar.bot{ background:var(--brass); color:#14100A; }
+  .msg-name{ font-weight:600; font-size:13px; }
+  .msg-name .who-tag{ font-family:'IBM Plex Mono',monospace; font-weight:400; color:var(--ink-dim); font-size:11px; margin-left:6px; }
+  .msg-text{ color:var(--ink-dim); margin-top:2px; }
+  .msg-text strong{ color:var(--ink); font-weight:600; }
+  .answer-block{
+    margin-top:8px; background:var(--bg-0); border:1px solid var(--line);
+    border-left:2px solid var(--signal); border-radius:3px; padding:12px 14px;
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink-dim);
+  }
+  .answer-block .k{ color:var(--ink); }
+  .answer-block .flag{ color:#D98A5A; }
+
+  /* ---------- SECTION SCAFFOLD ---------- */
+  section{ padding:72px 0; border-bottom:1px solid var(--line); }
+  .section-head{ max-width:640px; margin-bottom:40px; }
+  .section-head .eyebrow{ margin-bottom:12px; }
+  .section-head h2{ font-size:30px; font-weight:600; }
+  .section-head p{ color:var(--ink-dim); margin-top:12px; font-size:15.5px; }
+
+  /* ---------- MECHANISM / FLOW ---------- */
+  .flow{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:0;
+    border:1px solid var(--line); border-radius:6px; overflow:hidden;
+  }
+  .flow-step{
+    padding:24px 18px; border-right:1px solid var(--line); position:relative;
+    background:var(--bg-1);
+  }
+  .flow-step:last-child{ border-right:none; background:var(--bg-2); }
+  .flow-step .stage{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass);
+    text-transform:uppercase; letter-spacing:0.08em; display:block; margin-bottom:10px;
+  }
+  .flow-step h3{ font-size:15px; font-weight:600; margin-bottom:8px; }
+  .flow-step p{ font-size:12.5px; color:var(--ink-dim); margin:0; }
+  .flow-arrow{
+    position:absolute; right:-9px; top:50%; transform:translateY(-50%);
+    width:16px; height:16px; z-index:2; color:var(--line);
+  }
+
+  @media (max-width:900px){
+    .flow{ grid-template-columns:1fr; }
+    .flow-step{ border-right:none; border-bottom:1px solid var(--line); }
+    .flow-arrow{ display:none; }
+  }
+
+  /* ---------- STACK GRID ---------- */
+  .stack-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .stack-item{ background:var(--bg-1); padding:22px; }
+  .stack-item .grp{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass); text-transform:uppercase; letter-spacing:0.08em; }
+  .stack-item h3{ font-size:16px; margin-top:8px; font-weight:600; }
+  .stack-item p{ font-size:12.5px; color:var(--ink-dim); margin-top:6px; }
+
+  @media (max-width:900px){ .stack-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .stack-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- ENGINEERING NOTES ---------- */
+  .notes{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .note{ border-top:2px solid var(--brass); padding-top:16px; }
+  .note .num{ font-family:'IBM Plex Mono',monospace; color:var(--ink-dim); font-size:12px; }
+  .note h3{ font-size:16px; margin:8px 0; font-weight:600; }
+  .note p{ font-size:13.5px; color:var(--ink-dim); }
+  @media (max-width:900px){ .notes{ grid-template-columns:1fr; } }
+
+  /* ---------- SCALE STRIP ---------- */
+  .scale{ display:flex; gap:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .scale-cell{ flex:1; padding:26px 24px; border-right:1px solid var(--line); }
+  .scale-cell:last-child{ border-right:none; }
+  .scale-cell .big{ font-family:'Fraunces',serif; font-size:32px; font-weight:700; color:var(--brass); }
+  .scale-cell .lbl{ font-size:12.5px; color:var(--ink-dim); margin-top:6px; }
+  @media (max-width:700px){ .scale{ flex-direction:column; } .scale-cell{ border-right:none; border-bottom:1px solid var(--line); } }
+
+  /* ---------- FOOTER / CTA ---------- */
+  footer{ padding:64px 0; }
+  .cta-row{ display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .cta-row h2{ font-size:26px; font-weight:600; max-width:32ch; }
+  .btn{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; text-decoration:none;
+    background:var(--brass); color:#14100A; padding:13px 22px; border-radius:3px;
+    font-weight:500; white-space:nowrap;
+  }
+  .fine{ margin-top:36px; color:var(--ink-dim); font-size:12.5px; font-family:'IBM Plex Mono',monospace; }
+
+  @media (max-width:900px){
+    .hero-grid{ grid-template-columns:1fr; }
+    .hero h1{ font-size:32px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .msg{ animation:none !important; opacity:1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="brand"><span class="brand-mark"></span>CIPHERGUARD LABS</div>
+    <div class="eyebrow-nav">PRODUCTS</div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Product — Conversational Marketing Intelligence</span>
+      <h1>Seven BI reports.<br>One Slack message.<br><em>Zero dashboards opened.</em></h1>
+      <p class="lede">We built a system that connects a company's live analytics warehouse directly to a Slack bot — so anyone on the team can ask a plain-English question and get a formatted, source-checked answer back in seconds, on a schedule or on demand.</p>
+      <div class="hero-tags">
+        <span class="tag">Multi-warehouse (Redshift + PostgreSQL)</span>
+        <span class="tag">50+ live query tabs</span>
+        <span class="tag">Scheduled &amp; on-demand delivery</span>
+      </div>
+    </div>
+
+    <div class="slack-card">
+      <div class="slack-head"><span class="dot"></span>#marketing-intel</div>
+      <div class="slack-body">
+        <div class="msg">
+          <div class="avatar user">RL</div>
+          <div>
+            <div class="msg-name">Rich <span class="who-tag">10:42 AM</span></div>
+            <div class="msg-text">@marketing-intel <strong>how'd the LA store do yesterday vs target?</strong></div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="avatar bot">MI</div>
+          <div>
+            <div class="msg-name">marketing-intel <span class="who-tag">10:42 AM</span></div>
+            <div class="msg-text">Pulled from Retail Intelligence, store-aggregated before analysis:</div>
+            <div class="answer-block">
+              LA — <span class="k">153 orders / 365 units</span><br>
+              Gross receipts: <span class="k">$6,640.15</span> <span class="flag">▼ 6% vs. daily target</span><br>
+              Discount rate holding steady vs. 7-day avg
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">The mechanism</span>
+      <h2>What happens between the question and the answer</h2>
+      <p>The bot isn't just forwarding a prompt to an LLM. Each question is routed to the right warehouse, the raw data is aggregated in code before any model ever sees it, and the response is checked against source-of-truth numbers before it reaches Slack.</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step">
+        <span class="stage">01 — Ask</span>
+        <h3>Natural language in Slack</h3>
+        <p>A team member asks a question in plain English, in-channel or by mention. No query syntax, no dashboard login.</p>
+      </div>
+      <div class="flow-step">
+        <span class="stage">02 — Route</span>
+        <h3>Report &amp; warehouse routing</h3>
+        <p>The request is matched to the correct report — Sales, Marketing, Retail, Product, or PO — and the correct backing warehouse.</p>
+      </div>
+      <div class="flow-step">
+        <span class="stage">03 — Aggregate</span>
+        <h3>Pre-aggregation layer</h3>
+        <p>Raw multi-row report data is summarized in code first — never handed to the model unaggregated — cutting token volume roughly 95% and removing floating-point drift.</p>
+      </div>
+      <div class="flow-step">
+        <span class="stage">04 — Reason</span>
+        <h3>Claude analysis</h3>
+        <p>Claude interprets the pre-aggregated summary against the actual question, flags anomalies, and drafts the response.</p>
+      </div>
+      <div class="flow-step">
+        <span class="stage">05 — Deliver</span>
+        <h3>Formatted Slack reply</h3>
+        <p>A clean, formatted answer posts to the channel — on request, or on a standing daily/weekly/monthly/quarterly schedule.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Under the hood</span>
+      <h2>Built on infrastructure the team already trusts</h2>
+      <p>Nothing exotic — a small set of well-understood tools, wired together with a routing and aggregation layer that does the actual heavy lifting.</p>
+    </div>
+
+    <div class="stack-grid">
+      <div class="stack-item">
+        <span class="grp">Analytics</span>
+        <h3>Mode Analytics</h3>
+        <p>Redshift and PostgreSQL reports as the single source of query logic.</p>
+      </div>
+      <div class="stack-item">
+        <span class="grp">Interface</span>
+        <h3>Slack Bolt (Node.js)</h3>
+        <p>The bot lives where the team already works — no new tool to adopt.</p>
+      </div>
+      <div class="stack-item">
+        <span class="grp">Reasoning</span>
+        <h3>Claude</h3>
+        <p>Interprets pre-aggregated data and drafts the natural-language response.</p>
+      </div>
+      <div class="stack-item">
+        <span class="grp">Hosting</span>
+        <h3>Railway</h3>
+        <p>Runs the bot, scheduler, and a native Postgres store for scraped data.</p>
+      </div>
+      <div class="stack-item">
+        <span class="grp">Source data</span>
+        <h3>Sweed POS replica</h3>
+        <p>Read-only retail replica treated as ground truth for store-level revenue.</p>
+      </div>
+      <div class="stack-item">
+        <span class="grp">Collection</span>
+        <h3>Playwright (Python)</h3>
+        <p>Scrapes third-party marketplace listings into a structured Postgres table.</p>
+      </div>
+      <div class="stack-item">
+        <span class="grp">Scheduling</span>
+        <h3>Custom scheduler</h3>
+        <p>Tiered digest cadence — daily, weekly, monthly, quarterly — offset by domain.</p>
+      </div>
+      <div class="stack-item">
+        <span class="grp">Delivery</span>
+        <h3>GitHub / CI</h3>
+        <p>Version-controlled, reviewed changes before anything reaches production.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Engineering decisions that mattered</span>
+      <h2>The details that keep the numbers honest</h2>
+    </div>
+
+    <div class="notes">
+      <div class="note">
+        <span class="num">/ 01</span>
+        <h3>Math happens in code, not in the model</h3>
+        <p>Letting an LLM sum raw multi-row rows produces silent floating-point drift at scale. Every report pre-aggregates in JavaScript first — the model only ever reasons over verified totals.</p>
+      </div>
+      <div class="note">
+        <span class="num">/ 02</span>
+        <h3>Every field is verified against source of truth</h3>
+        <p>Each new report is validated tab-by-tab against the underlying POS export before it's trusted at scale — canonical field definitions are locked before rollout, not after.</p>
+      </div>
+      <div class="note">
+        <span class="num">/ 03</span>
+        <h3>Built to survive rate limits, not just avoid them</h3>
+        <p>Sequential processing, staged delays, and exponential backoff mean the system degrades gracefully under load instead of failing silently.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Built to grow</span>
+      <h2>Designed for one store. Proven at five. Built for sixty.</h2>
+      <p>The same replica-database pattern that powers today's retail footprint is the pattern for the next one — no rearchitecture required to add a market.</p>
+    </div>
+
+    <div class="scale">
+      <div class="scale-cell">
+        <div class="big">7</div>
+        <div class="lbl">Live analytics domains — sales, marketing, growth, retail, product, drop-off, PO spend</div>
+      </div>
+      <div class="scale-cell">
+        <div class="big">50+</div>
+        <div class="lbl">Query tabs served through a single conversational interface</div>
+      </div>
+      <div class="scale-cell">
+        <div class="big">5→60+</div>
+        <div class="lbl">Stores today, with the next market's rollout following the same connection pattern</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cta-row">
+      <h2>We build the systems that turn a data warehouse into a teammate.</h2>
+      <a href="mailto:hello@cipherguardlabs.com" class="btn">Talk to us →</a>
+    </div>
+    <div class="fine">CIPHERGUARD LABS — MARKETING INTELLIGENCE SYSTEMS</div>
+  </div>
+</footer>
+
+</body>
+</html>

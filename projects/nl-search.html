@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NL Search — CipherGuard Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0E14;
+    --panel:#12161F;
+    --panel-2:#171C26;
+    --line: rgba(220,213,190,0.14);
+    --paper:#DCD5BE;
+    --paper-2:#C9C1A4;
+    --text:#E7E4DA;
+    --muted:#8B93A1;
+    --stamp:#B23A2E;
+    --found:#2BB673;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 28px;}
+
+  /* subtle paper-fiber texture on ink bg */
+  .noise{
+    position:fixed; inset:0; pointer-events:none; opacity:0.035; z-index:0;
+    background-image:
+      repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px);
+  }
+
+  header.top{
+    position:relative; z-index:1;
+    padding:22px 0 0;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar{display:flex; justify-content:space-between; align-items:center; padding-bottom:18px;}
+  .brand{
+    font-family:var(--mono); font-weight:700; letter-spacing:0.12em;
+    font-size:12.5px; color:var(--paper); text-transform:uppercase;
+  }
+  .brand span{color:var(--muted); font-weight:400;}
+  .filecode{
+    font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:0.08em;
+  }
+
+  /* HERO */
+  .hero{position:relative; z-index:1; padding:64px 0 40px;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--mono); font-size:11.5px; letter-spacing:0.14em;
+    color:var(--stamp); text-transform:uppercase; margin-bottom:22px;
+    border:1px solid rgba(178,58,46,0.45); padding:5px 10px; border-radius:2px;
+  }
+  .eyebrow::before{content:"●"; font-size:8px;}
+  h1{
+    font-family:var(--mono); font-weight:700; letter-spacing:-0.01em;
+    font-size:clamp(34px, 5.2vw, 58px); line-height:1.04; margin:0 0 18px;
+    color:var(--paper);
+  }
+  h1 .accent{color:var(--found);}
+  .sub{
+    font-size:18px; color:var(--muted); max-width:620px; margin:0 0 36px;
+    font-weight:400;
+  }
+  .sub b{color:var(--text); font-weight:600;}
+
+  /* REDACTION DEMO — signature element */
+  .filecard{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    overflow:hidden; margin-bottom:8px;
+  }
+  .filecard .tab{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 18px; background:var(--panel-2); border-bottom:1px solid var(--line);
+    font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:0.06em;
+  }
+  .filecard .tab .dot{color:var(--found);}
+  .demo{padding:22px 24px 26px;}
+  .demo-row{margin-bottom:16px;}
+  .demo-label{
+    font-family:var(--mono); font-size:10.5px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.1em; margin-bottom:7px;
+  }
+  .demo-query{
+    font-family:var(--mono); font-size:15px; color:var(--text);
+    background:rgba(255,255,255,0.03); border:1px solid var(--line);
+    padding:12px 14px; border-radius:4px;
+  }
+  .redact{
+    position:relative; font-family:var(--mono); font-size:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--line);
+    padding:12px 14px; border-radius:4px; color:var(--found);
+    cursor:pointer; user-select:none;
+  }
+  .redact .bar{
+    display:inline-block; background:#0B0E14; color:transparent;
+    border-radius:2px; padding:0 2px; transition:all 0.35s ease;
+    box-shadow:inset 0 0 0 1px rgba(220,213,190,0.08);
+  }
+  .filecard.open .redact .bar{
+    background:transparent; color:var(--found); box-shadow:none;
+  }
+  .hint{
+    font-family:var(--mono); font-size:10.5px; color:var(--muted);
+    margin-top:10px; letter-spacing:0.04em;
+  }
+  .hint b{color:var(--paper);}
+
+  /* SECTION shell */
+  section{position:relative; z-index:1; padding:52px 0;border-top:1px solid var(--line);}
+  .stitle{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.16em; color:var(--muted);
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  h2{
+    font-family:var(--sans); font-weight:700; font-size:clamp(22px,3vw,30px);
+    color:var(--paper); margin:0 0 30px; max-width:640px;
+  }
+
+  /* MODES */
+  .modes{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  .mode{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:26px;
+  }
+  .mode .tag{
+    display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:0.1em;
+    color:var(--ink); background:var(--paper); padding:3px 8px; border-radius:2px;
+    margin-bottom:16px; text-transform:uppercase;
+  }
+  .mode h3{margin:0 0 10px; font-size:19px; color:var(--text);}
+  .mode p{margin:0 0 14px; color:var(--muted); font-size:14.5px;}
+  .mode ul{margin:0; padding-left:18px; color:var(--text); font-size:14px;}
+  .mode li{margin-bottom:7px;}
+
+  /* MECHANISM */
+  .flow{display:flex; flex-direction:column; gap:0; margin-top:6px;}
+  .step{
+    display:grid; grid-template-columns:52px 1fr; gap:18px; padding:18px 0;
+    border-top:1px solid var(--line);
+  }
+  .step:first-child{border-top:none;}
+  .step .num{
+    font-family:var(--mono); font-size:20px; color:var(--found); font-weight:700;
+  }
+  .step h4{margin:0 0 6px; font-size:16px; color:var(--text); font-weight:600;}
+  .step p{margin:0; color:var(--muted); font-size:14.5px; max-width:560px;}
+  .step code{
+    font-family:var(--mono); font-size:12.5px; color:var(--paper);
+    background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:3px;
+  }
+
+  /* STACK CHIPS */
+  .chips{display:flex; flex-wrap:wrap; gap:10px;}
+  .chip{
+    font-family:var(--mono); font-size:12px; color:var(--text);
+    border:1px solid var(--line); background:var(--panel);
+    padding:8px 13px; border-radius:20px; letter-spacing:0.02em;
+  }
+  .chip b{color:var(--found); font-weight:600;}
+
+  /* OUTCOMES */
+  .outcomes{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .outcome{border-left:2px solid var(--found); padding:4px 0 4px 16px;}
+  .outcome .num{font-family:var(--mono); font-size:26px; color:var(--paper); font-weight:700;}
+  .outcome .lbl{font-size:13.5px; color:var(--muted); margin-top:4px;}
+
+  /* FOOTER / CTA */
+  footer{
+    position:relative; z-index:1; padding:56px 0 60px; border-top:1px solid var(--line);
+  }
+  .cta{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;
+    background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:30px 32px;
+  }
+  .cta h3{margin:0 0 6px; font-size:20px; color:var(--paper);}
+  .cta p{margin:0; color:var(--muted); font-size:14px;}
+  .btn{
+    font-family:var(--mono); font-size:12.5px; letter-spacing:0.08em; text-transform:uppercase;
+    background:var(--found); color:#0B0E14; padding:12px 20px; border-radius:4px;
+    font-weight:700; white-space:nowrap; text-decoration:none;
+  }
+  .foot-meta{
+    display:flex; justify-content:space-between; margin-top:26px;
+    font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:0.05em;
+  }
+
+  @media (max-width:720px){
+    .modes{grid-template-columns:1fr;}
+    .outcomes{grid-template-columns:1fr 1fr;}
+    .cta{flex-direction:column; align-items:flex-start;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .redact .bar{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div class="brand">CipherGuard Labs <span>/ product file</span></div>
+    <div class="filecode">FILE NO. CGL-EDR-01 · STATUS: DEPLOYED</div>
+  </div>
+</header>
+
+<section class="hero" style="border-top:none; padding-top:64px;">
+  <div class="wrap">
+    <div class="eyebrow">Live in production</div>
+    <h1>Ask for the evidence.<br>Get a defensible <span class="accent">search</span>, not a support ticket.</h1>
+    <p class="sub">NL Search turns a plain-English request from your security team into a <b>precise Microsoft Purview eDiscovery query</b> or a <b>live Graph API pull</b> — no KQL syntax, no manual case setup, no waiting on IT.</p>
+
+    <div class="filecard" id="demoCard">
+      <div class="tab"><span>case_0472 — sample_query.log</span><span class="dot">● match found</span></div>
+      <div class="demo">
+        <div class="demo-row">
+          <div class="demo-label">Analyst asks</div>
+          <div class="demo-query">"Find all emails between Jordan Reyes and anyone at acmevendor.com mentioning 'invoice' from the last 90 days"</div>
+        </div>
+        <div class="demo-row" style="margin-bottom:0;">
+          <div class="demo-label">System generates</div>
+          <div class="redact" id="redactRow">(<span class="bar">from</span>:jordan.reyes@company.com <span class="bar">AND</span> <span class="bar">recipients</span>:*@acmevendor.com) <span class="bar">AND</span> <span class="bar">subjecttitle</span>:invoice <span class="bar">AND</span> <span class="bar">date</span>:90d — <span class="bar">ready to run in Purview</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="hint">Tap the query to declassify it — <b>this is the real KQL our engine writes</b>, not a mockup.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="stitle">Two ways to search</div>
+    <h2>Built for both the audit and the fire drill.</h2>
+    <div class="modes">
+      <div class="mode">
+        <span class="tag">Compliance Mode</span>
+        <h3>eDiscovery, end to end</h3>
+        <p>For legal holds, HR investigations, and formal PST exports where the trail has to hold up.</p>
+        <ul>
+          <li>Plain-English request → valid Purview KQL</li>
+          <li>Auto-creates the eDiscovery case for you</li>
+          <li>One click to Run, one click to Export</li>
+          <li>Every search is reviewable before it's submitted</li>
+        </ul>
+      </div>
+      <div class="mode">
+        <span class="tag">Live Search Mode</span>
+        <h3>Answers in seconds</h3>
+        <p>For the questions that can't wait on a formal case: "is this account still forwarding mail externally?"</p>
+        <ul>
+          <li>Real-time calls straight to Microsoft Graph</li>
+          <li>No case, no export, no waiting</li>
+          <li>Same natural-language interface</li>
+          <li>Built for triage, not the record</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="stitle">The mechanism</div>
+    <h2>Plain English in. A tenant-safe query out.</h2>
+    <div class="flow">
+      <div class="step">
+        <div class="num">01</div>
+        <div>
+          <h4>Your analyst types the request</h4>
+          <p>No query language, no field names to memorize — just a description of what they're looking for, written the way they'd say it out loud.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <div>
+          <h4>An AI planning layer interprets it</h4>
+          <p>The request is parsed into a structured plan — either Purview KQL (<code>kql.js</code>) for a formal case, or a Graph API call plan (<code>claude.js</code>) for a live lookup — depending on the mode selected.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <div>
+          <h4>The plan is shown before it runs</h4>
+          <p>The generated query is surfaced in plain view, so the analyst can confirm scope and intent before anything touches the tenant.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">04</div>
+        <div>
+          <h4>It's executed against Microsoft 365</h4>
+          <p>Authenticated through Azure AD (MSAL), the request either creates and runs a Purview eDiscovery search (<code>purview.js</code>) or queries Graph directly (<code>graph.js</code>) — with results and export links returned in one pass.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="stitle">What's under the hood</div>
+    <h2>Standard Microsoft plumbing. No new agents, no new attack surface.</h2>
+    <div class="chips">
+      <span class="chip"><b>Node.js</b> + Express</span>
+      <span class="chip"><b>Microsoft Graph API</b></span>
+      <span class="chip"><b>Microsoft Purview</b> Compliance Center</span>
+      <span class="chip"><b>Azure AD</b> / MSAL auth code flow</span>
+      <span class="chip">JWT session cookies</span>
+      <span class="chip">Claude API — NL→KQL &amp; NL→Graph planning</span>
+      <span class="chip">Railway hosting</span>
+      <span class="chip">Single-page dashboard, no client install</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="stitle">Why it matters</div>
+    <h2>Search that used to take a ticket now takes a sentence.</h2>
+    <div class="outcomes">
+      <div class="outcome">
+        <div class="num">1-click</div>
+        <div class="lbl">from natural-language request to a running eDiscovery case</div>
+      </div>
+      <div class="outcome">
+        <div class="num">2 modes</div>
+        <div class="lbl">formal compliance search and real-time live lookup, same interface</div>
+      </div>
+      <div class="outcome">
+        <div class="num">0</div>
+        <div class="lbl">KQL syntax your analysts need to learn or maintain</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cta">
+      <div>
+        <h3>Bringing this to your M365 tenant?</h3>
+        <p>We'll walk through the Purview permissions and a live demo of both modes.</p>
+      </div>
+      <a class="btn" href="mailto:hello@cipherguardlabs.co">Request a walkthrough</a>
+    </div>
+    <div class="foot-meta">
+      <span>CipherGuard Labs</span>
+      <span>cipherguardlabs.co</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const card = document.getElementById('demoCard');
+  const row = document.getElementById('redactRow');
+  row.addEventListener('click', () => {
+    card.classList.toggle('open');
+    card.querySelector('.dot').textContent = card.classList.contains('open') ? '● declassified' : '● match found';
+  });
+</script>
+
+</body>
+</html>
