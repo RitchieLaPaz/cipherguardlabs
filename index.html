@@ -87,10 +87,36 @@
   .sub{font-size:18px;line-height:1.65;color:var(--parchment-dim);max-width:52ch;margin:0 0 44px;}
   .cta-row{display:flex;gap:18px;align-items:center;}
   .btn{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;padding:14px 26px;
-       border:1px solid var(--bronze);color:var(--parchment);text-decoration:none;transition:.25s;}
+       border:1px solid var(--bronze);color:var(--parchment);text-decoration:none;transition:.25s;
+       background:none;cursor:none;-webkit-appearance:none;appearance:none;display:inline-block;}
   .btn.solid{background:var(--bronze);color:var(--ink);}
   .btn:hover{background:var(--bronze-bright);color:var(--ink);border-color:var(--bronze-bright);}
   .btn.ghost:hover{background:transparent;color:var(--teal);border-color:var(--teal);}
+
+  /* scoping-call modal */
+  .modal-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;
+    background:rgba(10,10,13,0.72);opacity:0;pointer-events:none;transition:opacity .25s ease;padding:24px;}
+  .modal-overlay.open{opacity:1;pointer-events:auto;}
+  .modal-card{background:var(--ink-2);border:1px solid var(--hair);max-width:440px;width:100%;
+    padding:38px;position:relative;transform:translateY(12px);transition:transform .25s ease;}
+  .modal-overlay.open .modal-card{transform:translateY(0);}
+  .modal-card h3{font-family:'Fraunces',serif;font-weight:500;font-size:26px;margin:0 0 10px;}
+  .modal-sub{font-size:14px;color:var(--parchment-dim);margin:0 0 26px;line-height:1.5;}
+  .modal-close{position:absolute;top:22px;right:22px;background:none;border:none;color:var(--parchment-dim);
+    font-size:22px;line-height:1;cursor:none;padding:4px;}
+  .modal-close:hover{color:var(--bronze-bright);}
+  #scopeForm label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    color:var(--parchment-dim);text-transform:uppercase;margin-bottom:18px;}
+  #scopeForm input,#scopeForm textarea{display:block;width:100%;margin-top:8px;background:var(--ink);
+    border:1px solid var(--hair);color:var(--parchment);font-family:'IBM Plex Sans',sans-serif;font-size:14px;
+    padding:11px 12px;box-sizing:border-box;}
+  #scopeForm input:focus,#scopeForm textarea:focus{outline:none;border-color:var(--bronze);}
+  #scopeForm textarea{resize:vertical;font-family:inherit;}
+  #scopeForm button[type="submit"]{width:100%;margin-top:6px;}
+  #scopeForm button[type="submit"]:disabled{opacity:.5;}
+  .form-status{font-family:'IBM Plex Mono',monospace;font-size:12px;margin:14px 0 0;min-height:16px;}
+  .form-status.ok{color:var(--teal);}
+  .form-status.err{color:#d98a5a;}
 
   /* case files */
   section.cases{padding:100px 40px;border-bottom:1px solid var(--hair);}
@@ -174,7 +200,7 @@
     <p class="sub">Automation platforms route messages between tools you already own. We build the intelligence underneath — reputation operations, warehouse-aware analytics bots, brand dashboards, and compliance search, engineered from the ground up and shipped into your actual workflow.</p>
     <div class="cta-row">
       <a class="btn solid" href="#work">View the work</a>
-      <a class="btn ghost" href="mailto:hello@cipherguardlabs.com?subject=Scoping%20call">Book a scoping call</a>
+      <a class="btn ghost" href="#contact">Book a scoping call</a>
     </div>
   </div>
 </header>
@@ -256,7 +282,7 @@
   <div class="wrap" style="padding:0;">
     <div class="eyebrow" style="justify-content:center;">Start a build</div>
     <h2>Tell us what you're<br><span style="font-style:italic;color:var(--bronze-bright);">tired of watching manually.</span></h2>
-    <a class="btn solid" href="mailto:hello@cipherguardlabs.com?subject=Scoping%20call">Book a scoping call</a>
+    <button class="btn solid" type="button" data-open-modal>Book a scoping call</button>
     <div class="foot-links">
       <span>© CIPHERGUARD LABS</span>
       <span>PRIVACY</span>
@@ -264,6 +290,30 @@
     </div>
   </div>
 </footer>
+
+<div class="modal-overlay" id="scopeModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="scopeModalTitle">
+    <button class="modal-close" type="button" aria-label="Close" data-close-modal>&times;</button>
+    <h3 id="scopeModalTitle">Book a scoping call</h3>
+    <p class="modal-sub">Tell us what you're building. We'll reply within a day.</p>
+    <form id="scopeForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+      <label>Name
+        <input type="text" name="name" required>
+      </label>
+      <label>Email
+        <input type="email" name="email" required>
+      </label>
+      <label>Company
+        <input type="text" name="company">
+      </label>
+      <label>What are you looking to build?
+        <textarea name="message" rows="4" required></textarea>
+      </label>
+      <button type="submit" class="btn solid">Send request</button>
+      <p class="form-status" aria-live="polite"></p>
+    </form>
+  </div>
+</div>
 
 <script>
   const CIPHER_CHARS = "01ΔΞΘΣ#%&*+=/\\<>";
@@ -276,7 +326,7 @@
     dot.style.left = e.clientX+'px';
     dot.style.top = e.clientY+'px';
   });
-  document.querySelectorAll('a,.card').forEach(el=>{
+  document.querySelectorAll('a,.card,button').forEach(el=>{
     el.addEventListener('mouseenter',()=>reticle.classList.add('active'));
     el.addEventListener('mouseleave',()=>reticle.classList.remove('active'));
   });
@@ -316,6 +366,69 @@
       aiEl.innerHTML = chars.join("");
       setTimeout(()=>{ aiEl.textContent = base; }, 130);
     }, 1400);
+  });
+
+  /* scoping-call modal */
+  const scopeModal = document.getElementById('scopeModal');
+  const scopeForm = document.getElementById('scopeForm');
+  const formStatus = scopeForm.querySelector('.form-status');
+  let lastFocused = null;
+
+  function openModal(){
+    lastFocused = document.activeElement;
+    scopeModal.classList.add('open');
+    scopeModal.setAttribute('aria-hidden','false');
+    const firstInput = scopeForm.querySelector('input');
+    if(firstInput) firstInput.focus();
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(){
+    scopeModal.classList.remove('open');
+    scopeModal.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+    if(lastFocused) lastFocused.focus();
+  }
+
+  document.querySelectorAll('[data-open-modal]').forEach(btn=>{
+    btn.addEventListener('click', openModal);
+  });
+  document.querySelectorAll('[data-close-modal]').forEach(btn=>{
+    btn.addEventListener('click', closeModal);
+  });
+  scopeModal.addEventListener('click', (e)=>{
+    if(e.target === scopeModal) closeModal();
+  });
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && scopeModal.classList.contains('open')) closeModal();
+  });
+
+  scopeForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const submitBtn = scopeForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    formStatus.textContent = 'Sending…';
+    formStatus.className = 'form-status';
+    try{
+      const res = await fetch(scopeForm.action, {
+        method:'POST',
+        body:new FormData(scopeForm),
+        headers:{ 'Accept':'application/json' }
+      });
+      if(res.ok){
+        formStatus.textContent = 'Sent — we\'ll reply within a day.';
+        formStatus.className = 'form-status ok';
+        scopeForm.reset();
+        setTimeout(closeModal, 1800);
+      } else {
+        formStatus.textContent = 'Something went wrong. Try again, or email hello@cipherguardlabs.com directly.';
+        formStatus.className = 'form-status err';
+        submitBtn.disabled = false;
+      }
+    } catch(err){
+      formStatus.textContent = 'Something went wrong. Try again, or email hello@cipherguardlabs.com directly.';
+      formStatus.className = 'form-status err';
+      submitBtn.disabled = false;
+    }
   });
 </script>
 
