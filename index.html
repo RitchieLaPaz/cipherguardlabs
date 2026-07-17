@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CipherGuard Labs — AI systems that watch, decode, act</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12131a;
+    --ink-2:#1b1c26;
+    --plum:#241f30;
+    --parchment:#ede7da;
+    --parchment-dim:#a8a196;
+    --bronze:#b8874f;
+    --bronze-bright:#d9a86a;
+    --teal:#5aada4;
+    --hair:rgba(237,231,218,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--parchment);font-family:'IBM Plex Sans',sans-serif;cursor:none;overflow-x:hidden;}
+  a{color:inherit;}
+
+  /* ambient continuous animation: drifting scan sweep + faint grid */
+  #scanfield{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+  #scanfield .grid-layer{position:absolute;inset:-2px;
+    background-image:linear-gradient(var(--hair) 1px, transparent 1px), linear-gradient(90deg, var(--hair) 1px, transparent 1px);
+    background-size:64px 64px;opacity:.5;}
+  #scanfield .sweep{position:absolute;left:0;right:0;height:220px;
+    background:linear-gradient(180deg, transparent 0%, rgba(184,135,79,0.1) 45%, rgba(217,168,106,0.18) 50%, rgba(184,135,79,0.1) 55%, transparent 100%);
+    animation:sweep-move 9s linear infinite;}
+  @keyframes sweep-move{0%{top:-220px;}100%{top:100%;}}
+  @media (prefers-reduced-motion: reduce){#scanfield .sweep{animation:none;display:none;}}
+  nav,header.hero,section.cases,section.method,footer{position:relative;z-index:2;}
+
+  /* reticle: cipher rotor */
+  #reticle{
+    position:fixed;top:0;left:0;width:34px;height:34px;
+    pointer-events:none;z-index:9999;transform:translate(-50%,-50%);
+    transition:width .18s ease,height .18s ease,opacity .2s ease;
+  }
+  #reticle.active{width:46px;height:46px;}
+  #reticle svg{width:100%;height:100%;display:block;}
+  #reticle .rotor-ring{animation:rotor-spin 7s linear infinite;transform-origin:22px 22px;}
+  #reticle.active .rotor-ring{animation-duration:2.2s;}
+  @keyframes rotor-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  #reticle .rotor-stroke{stroke:var(--bronze);transition:stroke .18s ease;}
+  #reticle.active .rotor-stroke{stroke:var(--teal);}
+  #reticle .rotor-hub{fill:var(--bronze);transition:fill .18s ease;}
+  #reticle.active .rotor-hub{fill:var(--teal);}
+  #reticle-dot{position:fixed;top:0;left:0;width:3px;height:3px;background:var(--bronze);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+  @media (hover:none){#reticle,#reticle-dot{display:none;} body{cursor:auto;}}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 40px;}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+      padding:22px 40px;border-bottom:1px solid var(--hair);backdrop-filter:blur(6px);background:rgba(18,19,26,0.72);}
+  .brand{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.12em;color:var(--parchment);}
+  .brand b{color:var(--bronze-bright);font-weight:500;}
+  .navlinks{display:flex;gap:36px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;color:var(--parchment-dim);}
+  .navlinks span{cursor:pointer;position:relative;padding:2px 0;}
+  .navlinks span:hover{color:var(--bronze-bright);}
+
+  /* hero */
+  header.hero{padding:120px 40px 100px;position:relative;border-bottom:1px solid var(--hair);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;color:var(--bronze);
+           text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--bronze);}
+
+  .ai-first{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:clamp(18px,2.4vw,28px);
+    letter-spacing:.08em;color:var(--bronze-bright);margin:0 0 30px;display:flex;align-items:center;gap:18px;}
+  .ai-first .line{flex:1;height:1px;background:linear-gradient(90deg, var(--bronze) 0%, transparent 100%);
+    max-width:80px;}
+  .ai-first .glyph-flicker{color:var(--teal);}
+  .not-this{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.06em;color:var(--parchment-dim);
+    margin:0 0 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .not-this .struck{text-decoration:line-through;text-decoration-color:#e6c229;text-decoration-thickness:2px;
+    color:#f2d84b;opacity:.9;font-size:1.5em;font-weight:500;}
+  .not-this .not-word{color:var(--parchment-dim);}
+
+  h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(40px,6vw,74px);line-height:1.04;
+     letter-spacing:-.01em;margin:0 0 28px;max-width:18ch;}
+  .decrypt-word{display:inline-block;}
+  h1 .accent{font-style:italic;font-weight:300;color:var(--bronze-bright);}
+  .sub{font-size:18px;line-height:1.65;color:var(--parchment-dim);max-width:52ch;margin:0 0 44px;}
+  .cta-row{display:flex;gap:18px;align-items:center;}
+  .btn{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;padding:14px 26px;
+       border:1px solid var(--bronze);color:var(--parchment);text-decoration:none;transition:.25s;}
+  .btn.solid{background:var(--bronze);color:var(--ink);}
+  .btn:hover{background:var(--bronze-bright);color:var(--ink);border-color:var(--bronze-bright);}
+  .btn.ghost:hover{background:transparent;color:var(--teal);border-color:var(--teal);}
+
+  /* case files */
+  section.cases{padding:100px 40px;border-bottom:1px solid var(--hair);}
+  .section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:56px;gap:24px;flex-wrap:wrap;}
+  .section-head h2{font-family:'Fraunces',serif;font-weight:500;font-size:34px;margin:0;}
+  .section-head p{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--parchment-dim);letter-spacing:.05em;max-width:34ch;margin:0;}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);}
+  .card{background:var(--ink);padding:38px;position:relative;transition:background .3s ease;
+        display:block;text-decoration:none;color:inherit;}
+  .card:hover{background:var(--ink-2);}
+  .card .code{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--bronze);letter-spacing:.1em;
+              display:flex;justify-content:space-between;margin-bottom:22px;}
+  .card .code .status{color:var(--teal);}
+  .card h3{font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:0 0 12px;}
+  .card p.desc{font-size:14px;line-height:1.6;color:var(--parchment-dim);margin:0 0 24px;max-width:38ch;}
+  .stat-line{display:flex;align-items:baseline;gap:10px;border-top:1px solid var(--hair);padding-top:16px;}
+  .stat-line .big{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--bronze);white-space:nowrap;}
+  .card:hover .stat-line .big{color:var(--teal);}
+  .stat-line .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--parchment-dim);line-height:1.4;}
+
+  /* method */
+  section.method{padding:100px 40px;border-bottom:1px solid var(--hair);background:var(--plum);}
+  .method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;}
+  .method-item .glyph{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--bronze);margin-bottom:18px;letter-spacing:.1em;}
+  .method-item h4{font-family:'Fraunces',serif;font-size:22px;font-weight:500;margin:0 0 12px;}
+  .method-item p{font-size:14.5px;color:var(--parchment-dim);line-height:1.6;margin:0;max-width:34ch;}
+
+  /* footer cta */
+  footer{padding:110px 40px 60px;text-align:center;}
+  footer h2{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(30px,4vw,46px);margin:0 0 30px;}
+  .foot-links{margin-top:90px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;
+              font-size:11px;color:var(--parchment-dim);letter-spacing:.05em;border-top:1px solid var(--hair);padding-top:26px;}
+
+  @media (max-width:900px){
+    .grid{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:760px){
+    .grid,.method-grid{grid-template-columns:1fr;}
+    nav,header.hero,section.cases,section.method,footer{padding-left:22px;padding-right:22px;}
+    .navlinks{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="scanfield"><div class="grid-layer"></div><div class="sweep"></div></div>
+<div id="reticle">
+  <svg viewBox="0 0 44 44">
+    <g class="rotor-ring">
+      <circle class="rotor-stroke" cx="22" cy="22" r="16" fill="none" stroke-width="1.2"/>
+      <g class="rotor-stroke" stroke-width="1.2">
+        <line x1="22" y1="6" x2="22" y2="10"/>
+        <line x1="22" y1="34" x2="22" y2="38"/>
+        <line x1="6" y1="22" x2="10" y2="22"/>
+        <line x1="34" y1="22" x2="38" y2="22"/>
+        <line x1="10.7" y1="10.7" x2="13.5" y2="13.5"/>
+        <line x1="30.5" y1="30.5" x2="33.3" y2="33.3"/>
+        <line x1="10.7" y1="33.3" x2="13.5" y2="30.5"/>
+        <line x1="30.5" y1="13.5" x2="33.3" y2="10.7"/>
+      </g>
+    </g>
+    <circle class="rotor-hub" cx="22" cy="22" r="2.6"/>
+  </svg>
+</div>
+<div id="reticle-dot"></div>
+
+<nav>
+  <div class="brand">CIPHER<b>GUARD</b> LABS</div>
+  <div class="navlinks">
+    <span>WORK</span><span>METHOD</span><span>CONTACT</span>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap" style="padding:0;">
+    <div class="ai-first"><span class="line"></span><span id="ai-first-text">AI&#8209;FIRST SOLUTIONS LAB</span><span class="line"></span></div>
+    <p class="not-this">Not <span class="struck">MCPs</span>. Not <span class="struck">Zapier</span>. Not another <span class="struck">no-code stack</span>.</p>
+    <h1><span class="decrypt-word" data-final="Where no-code">Where no-code</span> <span class="decrypt-word" data-final="stops,">stops,</span><br>
+        <span class="decrypt-word accent" data-final="we begin.">we begin.</span></h1>
+    <p class="sub">Automation platforms route messages between tools you already own. We build the intelligence underneath — reputation operations, warehouse-aware analytics bots, brand dashboards, and compliance search, engineered from the ground up and shipped into your actual workflow.</p>
+    <div class="cta-row">
+      <a class="btn solid" href="#">View the work</a>
+      <a class="btn ghost" href="#">Book a scoping call</a>
+    </div>
+  </div>
+</header>
+
+<section class="cases">
+  <div class="wrap" style="padding:0;">
+    <div class="section-head">
+      <h2>Deployed systems</h2>
+      <p>FIVE ACTIVE BUILDS · CASE FILES OPEN ON REQUEST</p>
+    </div>
+    <div class="grid">
+
+      <a class="card" href="projects/repupilot.html" target="_blank" rel="noopener">
+        <div class="code"><span>FILE / REPU-01</span><span class="status">● LIVE</span></div>
+        <h3>RepuPilot</h3>
+        <p class="desc">Reputation operations for multi-location retail — scans every listing across Google, Yelp, Reddit, and Apple, drafts every reply in the brand's voice, and manages listing changes (hours, closures, descriptions) at scale.</p>
+        <div class="stat-line"><span class="big">35+</span><span class="lbl">locations under<br>management</span></div>
+      </a>
+
+      <a class="card" href="projects/marketing-intel.html" target="_blank" rel="noopener">
+        <div class="code"><span>FILE / MKTL-02</span><span class="status">● LIVE</span></div>
+        <h3>Marketing Intel Bot</h3>
+        <p class="desc">Ask your data warehouse a question in Slack, in plain English — the bot routes it, aggregates in code, and Claude reasons only over verified totals.</p>
+        <div class="stat-line"><span class="big">~95%</span><span class="lbl">token volume cut by<br>pre-aggregation</span></div>
+      </a>
+
+      <a class="card" href="projects/brand-intelligence.html" target="_blank" rel="noopener">
+        <div class="code"><span>FILE / BRND-03</span><span class="status">● LIVE</span></div>
+        <h3>Brand Intelligence Platform</h3>
+        <p class="desc">One dashboard for sales, inventory, promotions, pricing, and market rank — pulled live from the warehouse and POS, scoped per brand automatically.</p>
+        <div class="stat-line"><span class="big">4 → 1</span><span class="lbl">source systems unified<br>behind one login</span></div>
+      </a>
+
+      <a class="card" href="projects/okako.html" target="_blank" rel="noopener">
+        <div class="code"><span>FILE / OKAKO-04</span><span class="status">● LIVE</span></div>
+        <h3>OKako</h3>
+        <p class="desc">Point a camera at a menu or ingredients panel — on-device OCR matches it against a clinician-owned list. No macro estimates, no photo ever uploaded.</p>
+        <div class="stat-line"><span class="big">0</span><span class="lbl">photos leave the<br>device — text only</span></div>
+      </a>
+
+      <a class="card" href="projects/nl-search.html" target="_blank" rel="noopener">
+        <div class="code"><span>FILE / EDR-05</span><span class="status">● LIVE</span></div>
+        <h3>NL Search</h3>
+        <p class="desc">A plain-English request becomes a defensible Microsoft Purview eDiscovery query or a live Graph API pull — built for security and compliance teams.</p>
+        <div class="stat-line"><span class="big">0</span><span class="lbl">KQL syntax your<br>analysts need to learn</span></div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section class="method">
+  <div class="wrap" style="padding:0;">
+    <div class="section-head" style="margin-bottom:64px;">
+      <h2>How we build</h2>
+      <p>THE SAME THREE MOVES ON EVERY ENGAGEMENT</p>
+    </div>
+    <div class="method-grid">
+      <div class="method-item">
+        <div class="glyph">OBSERVE →</div>
+        <h4>Watch the real signal</h4>
+        <p>We instrument the actual data your team already has — reviews, campaigns, assets, charts — before designing anything.</p>
+      </div>
+      <div class="method-item">
+        <div class="glyph">DECODE →</div>
+        <h4>Turn noise into a decision</h4>
+        <p>Models are tuned to surface the one thing that matters today, not a dashboard of everything that could.</p>
+      </div>
+      <div class="method-item">
+        <div class="glyph">ACT</div>
+        <h4>Ship it into the workflow</h4>
+        <p>The system sits inside Slack, your CRM, or your portal — not in a separate tab nobody opens.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="padding:0;">
+    <div class="eyebrow" style="justify-content:center;">Start a build</div>
+    <h2>Tell us what you're<br><span style="font-style:italic;color:var(--bronze-bright);">tired of watching manually.</span></h2>
+    <a class="btn solid" href="#">Book a scoping call</a>
+    <div class="foot-links">
+      <span>© CIPHERGUARD LABS</span>
+      <span>PRIVACY</span>
+      <span>HELLO@CIPHERGUARDLABS.COM</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const CIPHER_CHARS = "01ΔΞΘΣ#%&*+=/\\<>";
+  const reticle = document.getElementById('reticle');
+  const dot = document.getElementById('reticle-dot');
+
+  window.addEventListener('mousemove', (e)=>{
+    reticle.style.left = e.clientX+'px';
+    reticle.style.top = e.clientY+'px';
+    dot.style.left = e.clientX+'px';
+    dot.style.top = e.clientY+'px';
+  });
+  document.querySelectorAll('a,.card,.navlinks span').forEach(el=>{
+    el.addEventListener('mouseenter',()=>reticle.classList.add('active'));
+    el.addEventListener('mouseleave',()=>reticle.classList.remove('active'));
+  });
+
+  function decryptReveal(el){
+    const final = el.dataset.final;
+    let frame = 0;
+    const totalFrames = 14;
+    const revealAt = final.length > 0 ? Array.from({length: final.length}, (_,i)=> Math.floor((i/final.length)*totalFrames*0.6)+Math.floor(Math.random()*4)) : [];
+    const iv = setInterval(()=>{
+      let out = "";
+      for(let i=0;i<final.length;i++){
+        if(final[i] === " "){ out += " "; continue; }
+        if(frame >= revealAt[i]){ out += final[i]; }
+        else { out += CIPHER_CHARS[Math.floor(Math.random()*CIPHER_CHARS.length)]; }
+      }
+      el.textContent = out;
+      frame++;
+      if(frame > totalFrames){ el.textContent = final; clearInterval(iv); }
+    }, 42);
+  }
+
+  window.addEventListener('DOMContentLoaded', ()=>{
+    document.querySelectorAll('.decrypt-word').forEach((el,i)=>{
+      setTimeout(()=>decryptReveal(el), i*160);
+    });
+
+    /* continuous ambient flicker on the AI-FIRST label, forever */
+    const aiEl = document.getElementById('ai-first-text');
+    const base = aiEl.textContent;
+    setInterval(()=>{
+      const chars = base.split("");
+      const idx = Math.floor(Math.random()*chars.length);
+      if(chars[idx] === "-" || chars[idx] === "\u2011" || chars[idx] === " ") return;
+      const original = chars[idx];
+      chars[idx] = "<span class='glyph-flicker'>"+CIPHER_CHARS[Math.floor(Math.random()*CIPHER_CHARS.length)]+"</span>";
+      aiEl.innerHTML = chars.join("");
+      setTimeout(()=>{ aiEl.textContent = base; }, 130);
+    }, 1400);
+  });
+</script>
+
+</body>
+</html>
