@@ -88,6 +88,15 @@
 
   .ai-first{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:clamp(18px,2.4vw,26px);
     letter-spacing:.08em;color:var(--bronze-bright);margin:0 0 6px;display:flex;align-items:center;gap:18px;}
+  .dust-field{position:absolute;inset:0;z-index:-1;pointer-events:none;}
+  .dust-mote{position:absolute;border-radius:50%;background:#8fc2ff;
+    box-shadow:0 0 6px 1px rgba(143,194,255,0.9), 0 0 14px 3px rgba(90,150,230,0.4);
+    animation-name:dust-twinkle;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+  @keyframes dust-twinkle{
+    0%,100%{opacity:.1;transform:scale(0.7);}
+    50%{opacity:1;transform:scale(1.15);}
+  }
+  @media (prefers-reduced-motion: reduce){.dust-mote{animation:none;opacity:.5;}}
   .ai-first .line{flex:1;height:1px;background:linear-gradient(90deg, var(--bronze) 0%, transparent 100%);
     max-width:80px;}
   .ai-first .glyph-flicker{color:var(--teal);}
@@ -211,6 +220,7 @@
 
 <header class="hero">
   <div class="hero-orrery" aria-hidden="true">
+    <div class="dust-field" id="dustField"></div>
     <svg viewBox="0 0 640 640">
       <g class="orrery-ring r1" transform="translate(-40,-40)">
         <circle cx="320" cy="320" r="260" fill="none" stroke="var(--bronze)" stroke-width="1"/>
@@ -422,6 +432,28 @@
       if(!g) return;
       g.textContent = glyphPool[Math.floor(Math.random()*glyphPool.length)];
     }, 2200);
+
+    /* pixie dust field */
+    const dustField = document.getElementById('dustField');
+    if(dustField){
+      const count = 55;
+      for(let i=0;i<count;i++){
+        const mote = document.createElement('div');
+        mote.className = 'dust-mote';
+        const size = 1.5 + Math.random()*2.5;
+        const cx = 50 + (Math.random()-0.5)*70;
+        const cy = 50 + (Math.random()-0.5)*70;
+        const duration = 2.5 + Math.random()*3.5;
+        const delay = Math.random()*5;
+        mote.style.width = size+'px';
+        mote.style.height = size+'px';
+        mote.style.left = cx+'%';
+        mote.style.top = cy+'%';
+        mote.style.animationDuration = duration+'s';
+        mote.style.animationDelay = '-'+delay+'s';
+        dustField.appendChild(mote);
+      }
+    }
   });
 
   /* scoping-call modal */
